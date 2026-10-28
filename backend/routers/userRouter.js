@@ -40,4 +40,46 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+
+    res.status(200).json({
+      message: "Users retrieved successfully",
+      users: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to retrieve users",
+      error: error.message,
+    });
+  }
+});
+
+
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "User retrieved successfully",
+      user: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to retrieve user",
+      error: error.message,
+    });
+  }
+});
+
+
 module.exports = router;
