@@ -12,12 +12,7 @@ console.log("Department router loaded")
 app.use(cors())
 app.use(express.json())
 app.use("/api/departments", departmentRouter)
- app.get("/check-route", (req, res) => {
-  res.send("CHECK ROUTE WORKS")
-})
-app.get("/test-server", (req, res) => {
-  res.send("Test server route works")
-})
+
 console.log("Department route mounted")
 
 app.get("/", (req, res) => {

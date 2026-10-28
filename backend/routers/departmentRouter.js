@@ -18,11 +18,17 @@ router.post("/", async (req, res) => {
       department: department,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to create department",
-      error: error.message,
+  if (error.code === 11000) {
+    return res.status(409).json({
+      message: "Department name already exists",
     });
   }
+
+  res.status(500).json({
+    message: "Failed to create department",
+    error: error.message,
+  });
+}
 });
 
 router.get("/", async (req, res) => {
@@ -95,8 +101,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.get("/test", (req, res) => {
-  res.send("Department router works");
-});
+
 
 module.exports = router;
