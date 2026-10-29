@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-console.log("DEPARTMENT ROUTER FILE LOADED");
 
 const Department = require("../models/Department");
 
@@ -100,7 +99,5 @@ router.delete("/:id", async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;

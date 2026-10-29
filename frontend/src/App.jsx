@@ -1,9 +1,52 @@
+
 import { useEffect, useState } from "react";
 
 const App = () => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/requests")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch requests");
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        setRequests(data.requests);
+      })
+      .catch(() => {
+        setError("Could not load requests");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div>
-      <h2>My Todos List</h2>
+      <h2>KAUH Request Management System</h2>
+
+      {loading && <p>Loading requests...</p>}
+
+      {error && <p>{error}</p>}
+
+      {!loading && !error && requests.length === 0 && (
+        <p>No requests found.</p>
+      )}
+
+      {requests.map((request) => (
+        <div key={request._id}>
+          <h3>{request.title}</h3>
+          <p>{request.description}</p>
+          <p>Type: {request.type}</p>
+          <p>Status: {request.status}</p>
+          <hr />
+        </div>
+      ))}
     </div>
   );
 };
