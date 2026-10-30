@@ -1,0 +1,90 @@
+
+.devices-page {
+  padding: 10px 0;
+}
+
+.devices-count {
+  background: #DCEAF5;
+  color: #142B4A;
+  padding: 9px 15px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.filter-card,
+.devices-table-card {
+  border: 1px solid #E1E8F0;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(20, 43, 74, 0.05);
+}
+
+.filter-card .form-control,
+.filter-card .form-select {
+  padding: 11px;
+  border-color: #D5DEE8;
+  border-radius: 8px;
+}
+
+.filter-card .form-control:focus,
+.filter-card .form-select:focus {
+  border-color: #142B4A;
+  box-shadow: 0 0 0 0.2rem rgba(20, 43, 74, 0.12);
+}
+
+.devices-table-card {
+  overflow: hidden;
+}
+
+.devices-table-card .table {
+  margin-bottom: 0;
+}
+
+.devices-table-card thead th {
+  background: #142B4A;
+  color: white;
+  padding: 15px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.devices-table-card tbody td {
+  padding: 15px;
+  color: #52677D;
+  font-size: 13px;
+}
+
+.devices-table-card tbody tr:hover {
+  background: #F3F7FB;
+}
+
+.device-status {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.device-available {
+  background: #D1E7DD;
+  color: #146C43;
+}
+
+.device-maintenance {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+.device-out {
+  background: #F8D7DA;
+  color: #842029;
+}
+
+.device-default {
+  background: #E9ECEF;
+  color: #495057;
+}

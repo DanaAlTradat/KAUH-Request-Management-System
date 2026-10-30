@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import NewRequest from "./pages/NewRequest";
+import Devices from "./pages/Devices";
 import "./App.css";
 
 const App = () => {
@@ -169,6 +170,15 @@ const App = () => {
         >
           <span>☷</span> All Requests
         </button>
+
+        <button
+  className={`sidebar-link ${
+    activePage === "devices" ? "active" : ""
+  }`}
+  onClick={() => setActivePage("devices")}
+>
+  <span>▣</span> Devices
+</button>
 
         <div className="sidebar-footer">
           <span>KAUH</span>
@@ -349,6 +359,7 @@ const App = () => {
                 </div>
               )}
 
+      
               <div className="row g-3">
                 {requests.map((request) => (
                   <div className="col-lg-6" key={request._id}>
@@ -358,6 +369,13 @@ const App = () => {
               </div>
             </section>
           )}
+                  {/* Devices Page */}
+{activePage === "devices" && (
+  <section>
+    <Devices />
+  </section>
+)}
+
 
         </main>
 
