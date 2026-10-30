@@ -5,14 +5,31 @@ const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState("");
+
   const [search, setSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+
   const [departments, setDepartments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Edit device states
+  const [editingDeviceId, setEditingDeviceId] = useState(null);
+
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    category: "",
+    assetTag: "",
+    brand: "",
+    model: "",
+    department: "",
+    status: "Available",
+    description: "",
+  });
+
+  // Add device form data
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -24,8 +41,7 @@ const [success, setSuccess] = useState("");
     description: "",
   });
 
-  // Fetch devices from backend
-
+  // Fetch devices and departments
   useEffect(() => {
     Promise.all([
       fetch("http://localhost:5000/api/devices"),
@@ -50,13 +66,14 @@ const [success, setSuccess] = useState("");
       });
   }, []);
 
-  // Get unique departments
+  // Get unique department names for filter
   const departmentNames = [
     ...new Set(
       devices.map((device) => device.department?.name).filter(Boolean),
     ),
   ];
-  // Handle form inputs
+
+  // Handle add form inputs
   const handleFormChange = (e) => {
     const { name, value } = e.target;
 
@@ -65,65 +82,135 @@ const [success, setSuccess] = useState("");
       [name]: value,
     });
   };
-  
-const handleAddDevice = async (e) => {
-  e.preventDefault();
 
-  setSuccess("");
+  // Handle edit form inputs
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
 
-  setError("");
-  setSaving(true);
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
 
-  try {
-    const response = await fetch(
-      "http://localhost:5000/api/devices",
-      {
+  // Add new device
+  const handleAddDevice = async (e) => {
+    e.preventDefault();
+
+    setSuccess("");
+    setError("");
+    setSaving(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/devices", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add device");
       }
-    );
 
-    const data = await response.json();
+      const devicesResponse = await fetch("http://localhost:5000/api/devices");
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to add device");
+      if (!devicesResponse.ok) {
+        throw new Error("Device added, but failed to refresh the list");
+      }
+
+      const devicesData = await devicesResponse.json();
+
+      setDevices(devicesData.devices || []);
+
+      setFormData({
+        name: "",
+        category: "",
+        assetTag: "",
+        brand: "",
+        model: "",
+        department: "",
+        status: "Available",
+        description: "",
+      });
+
+      setShowForm(false);
+      setSuccess("Device added successfully!");
+      setError("");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setSaving(false);
     }
+  };
 
-    // Refresh devices list
-    const devicesResponse = await fetch(
-      "http://localhost:5000/api/devices"
-    );
+  // Update existing device
+  const handleUpdateDevice = async (e) => {
+    e.preventDefault();
 
-    const devicesData = await devicesResponse.json();
+    setError("");
+    setSuccess("");
+    setSaving(true);
 
-    setDevices(devicesData.devices || []);
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/devices/${editingDeviceId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editFormData),
+        },
+      );
 
-    // Reset form
-    setFormData({
-      name: "",
-      category: "",
-      assetTag: "",
-      brand: "",
-      model: "",
-      department: "",
-      status: "Available",
-      description: "",
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update device");
+      }
+
+      const devicesResponse = await fetch("http://localhost:5000/api/devices");
+
+      if (!devicesResponse.ok) {
+        throw new Error("Device updated, but failed to refresh the list");
+      }
+
+      const devicesData = await devicesResponse.json();
+
+      setDevices(devicesData.devices || []);
+      setEditingDeviceId(null);
+      setSuccess("Device updated successfully!");
+      setError("");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Open edit form with current device data
+  const handleEditClick = (device) => {
+    setEditingDeviceId(device._id);
+
+    setEditFormData({
+      name: device.name || "",
+      category: device.category || "",
+      assetTag: device.assetTag || "",
+      brand: device.brand || "",
+      model: device.model || "",
+      department: device.department?._id || "",
+      status: device.status || "Available",
+      description: device.description || "",
     });
 
     setShowForm(false);
-
-setSuccess("Device added successfully!");
-setError("");
-
-  } catch (error) {
-    setError(error.message);
-  } finally {
-    setSaving(false);
-  }
-};
+    setSuccess("");
+    setError("");
+  };
 
   // Filter devices
   const filteredDevices = devices.filter((device) => {
@@ -172,201 +259,317 @@ setError("");
   return (
     <div className="devices-page">
       {/* Page Heading */}
-      
-{/* Page Heading */}
-<div className="page-heading">
-  <div>
-    <h2>Devices Management</h2>
-    <p>View and manage hospital equipment</p>
-  </div>
-
-  <div className="d-flex align-items-center gap-3">
-    <span className="devices-count">
-      {filteredDevices.length} of {devices.length} Devices
-    </span>
-
-    <button
-      className="btn add-device-btn"
-      onClick={() => setShowForm(!showForm)}
-    >
-      + Add New Device
-    </button>
-  </div>
-</div>
-
-
-{/* Add Device Form */}
-{showForm && (
-  <div className="card add-device-card mb-4">
-    <div className="card-header add-device-header">
-      <h5 className="mb-0">Add New Device</h5>
-      <p className="mb-0">Enter the device information below</p>
-    </div>
-
-    <div className="card-body p-4">
-      <form onSubmit={handleAddDevice}>
-        <div className="row g-3">
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Device Name
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              name="name"
-              value={formData.name}
-              onChange={handleFormChange}
-              placeholder="Enter device name"
-              required
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Category
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              name="category"
-              value={formData.category}
-              onChange={handleFormChange}
-              placeholder="Enter category"
-              required
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Asset Tag
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              name="assetTag"
-              value={formData.assetTag}
-              onChange={handleFormChange}
-              placeholder="Example: DEMO-069"
-              required
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Brand
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              name="brand"
-              value={formData.brand}
-              onChange={handleFormChange}
-              placeholder="Enter brand"
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Model
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              name="model"
-              value={formData.model}
-              onChange={handleFormChange}
-              placeholder="Enter model"
-            />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Department
-            </label>
-            <select
-              className="form-select"
-              name="department"
-              value={formData.department}
-              onChange={handleFormChange}
-              required
-            >
-              <option value="">Select department</option>
-
-              {departments.map((department) => (
-                <option key={department._id} value={department._id}>
-                  {department.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">
-              Device Status
-            </label>
-            <select
-              className="form-select"
-              name="status"
-              value={formData.status}
-              onChange={handleFormChange}
-            >
-              <option value="Available">Available</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-              <option value="Out of Service">Out of Service</option>
-            </select>
-          </div>
-
-          <div className="col-12">
-            <label className="form-label fw-semibold">
-              Description
-            </label>
-            <textarea
-              className="form-control"
-              name="description"
-              rows="3"
-              value={formData.description}
-              onChange={handleFormChange}
-              placeholder="Enter device description"
-            />
-          </div>
-
+      <div className="page-heading">
+        <div>
+          <h2>Devices Management</h2>
+          <p>View and manage hospital equipment</p>
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-4">
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => setShowForm(false)}
-          >
-            Cancel
-          </button>
+        <div className="d-flex align-items-center gap-3">
+          <span className="devices-count">
+            {filteredDevices.length} of {devices.length} Devices
+          </span>
 
           <button
-            type="submit"
             className="btn add-device-btn"
-            disabled={saving}
+            onClick={() => setShowForm(!showForm)}
           >
-            {saving ? "Saving..." : "Save Device"}
+            + Add New Device
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-)}
+      </div>
 
-{success && (
-  <div className="alert alert-success success-message">
-    <strong>Success!</strong> {success}
-  </div>
-)}
+      {/* Add Device Form */}
+      {showForm && (
+        <div className="card add-device-card mb-4">
+          <div className="card-header add-device-header">
+            <h5 className="mb-0">Add New Device</h5>
+            <p className="mb-0">Enter the device information below</p>
+          </div>
 
-{error && (
-  <div className="alert alert-danger">
-    {error}
-  </div>
-)}
-      
+          <div className="card-body p-4">
+            <form onSubmit={handleAddDevice}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Device Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    placeholder="Enter device name"
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Category</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleFormChange}
+                    placeholder="Enter category"
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Asset Tag</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="assetTag"
+                    value={formData.assetTag}
+                    onChange={handleFormChange}
+                    placeholder="Example: DEMO-071"
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Brand</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleFormChange}
+                    placeholder="Enter brand"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Model</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="model"
+                    value={formData.model}
+                    onChange={handleFormChange}
+                    placeholder="Enter model"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Department</label>
+                  <select
+                    className="form-select"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleFormChange}
+                    required
+                  >
+                    <option value="">Select department</option>
+
+                    {departments.map((department) => (
+                      <option key={department._id} value={department._id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">
+                    Device Status
+                  </label>
+                  <select
+                    className="form-select"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleFormChange}
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                    <option value="Out of Service">Out of Service</option>
+                  </select>
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Description</label>
+                  <textarea
+                    className="form-control"
+                    name="description"
+                    rows="3"
+                    value={formData.description}
+                    onChange={handleFormChange}
+                    placeholder="Enter device description"
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-end gap-2 mt-4">
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn add-device-btn"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Device"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="alert alert-success success-message">
+          <strong>Success!</strong> {success}
+        </div>
+      )}
+
+      {/* Edit Device Form */}
+      {editingDeviceId && (
+        <div className="card add-device-card mb-4">
+          <div className="card-header add-device-header">
+            <h5 className="mb-0">Edit Device</h5>
+            <p className="mb-0">Update the device information below</p>
+          </div>
+
+          <div className="card-body p-4">
+            <form onSubmit={handleUpdateDevice}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Device Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Category</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="category"
+                    value={editFormData.category}
+                    onChange={handleEditFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Asset Tag</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="assetTag"
+                    value={editFormData.assetTag}
+                    onChange={handleEditFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Brand</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="brand"
+                    value={editFormData.brand}
+                    onChange={handleEditFormChange}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Model</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="model"
+                    value={editFormData.model}
+                    onChange={handleEditFormChange}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">Department</label>
+                  <select
+                    className="form-select"
+                    name="department"
+                    value={editFormData.department}
+                    onChange={handleEditFormChange}
+                    required
+                  >
+                    <option value="">Select department</option>
+
+                    {departments.map((department) => (
+                      <option key={department._id} value={department._id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold">
+                    Device Status
+                  </label>
+                  <select
+                    className="form-select"
+                    name="status"
+                    value={editFormData.status}
+                    onChange={handleEditFormChange}
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                    <option value="Out of Service">Out of Service</option>
+                  </select>
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Description</label>
+                  <textarea
+                    className="form-control"
+                    name="description"
+                    rows="3"
+                    value={editFormData.description}
+                    onChange={handleEditFormChange}
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-end gap-2 mt-4">
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={() => setEditingDeviceId(null)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn add-device-btn"
+                  disabled={saving}
+                >
+                  {saving ? "Updating..." : "Update Device"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && <div className="alert alert-danger">{error}</div>}
 
       {/* Search and Filters */}
       <div className="card filter-card mb-4">
@@ -430,6 +633,7 @@ setError("");
                   <th>Department</th>
                   <th>Brand</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -455,12 +659,20 @@ setError("");
                         {device.status}
                       </span>
                     </td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleEditClick(device)}
+                      >
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
 
                 {filteredDevices.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center py-4">
+                    <td colSpan="7" className="text-center py-4">
                       No devices found.
                     </td>
                   </tr>
