@@ -9,12 +9,14 @@ const departmentRouter = require("./routers/departmentRouter");
 const requestRouter = require("./routers/requestRouter");
 const userRouter = require("./routers/userRouter");
 console.log("Department router loaded");
+const deviceRouter = require("./routers/deviceRouter");
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/departments", departmentRouter);
 app.use("/api/requests", requestRouter);
 app.use("/api/users", userRouter);
+app.use("/api/devices", deviceRouter);
 
 console.log("Department route mounted");
 
