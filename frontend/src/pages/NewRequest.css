@@ -1,0 +1,41 @@
+
+.request-card {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.request-header {
+  background-color: #142B4A;
+  border-bottom: 4px solid #D6B45A;
+}
+
+.request-header p {
+  color: #DCEAF5;
+}
+
+.request-card .form-control,
+.request-card .form-select {
+  padding: 12px;
+  border-radius: 8px;
+  border-color: #d5dee8;
+}
+
+.request-card .form-control:focus,
+.request-card .form-select:focus {
+  border-color: #142B4A;
+  box-shadow: 0 0 0 0.2rem rgba(20, 43, 74, 0.12);
+}
+
+.submit-btn {
+  background-color: #142B4A;
+  color: white;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #D6B45A;
+  color: #142B4A;
+}

@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import "./NewRequest.css";
 
 const NewRequest = ({ onRequestCreated }) => {
   const [departments, setDepartments] = useState([]);
@@ -90,7 +91,10 @@ const NewRequest = ({ onRequestCreated }) => {
       }
 
       setSuccess("Request created successfully!");
-      onRequestCreated();
+
+      if (onRequestCreated) {
+        onRequestCreated();
+      }
 
       setFormData({
         title: "",
@@ -105,135 +109,188 @@ const NewRequest = ({ onRequestCreated }) => {
     }
   };
 
+  // Filter devices by selected department
   const filteredDevices = devices.filter(
     (device) =>
       device.department?._id === formData.department
   );
 
   if (loading) {
-    return <p>Loading form data...</p>;
+    return (
+      <div className="text-center p-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2">Loading form data...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2>New Request</h2>
+    <div className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-lg-8 col-md-10">
 
-      {error && <p>{error}</p>}
-      {success && <p>{success}</p>}
+          <div className="card shadow border-0 request-card">
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Request Title</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="Enter request title"
-            required
-          />
+            <div className="card-header request-header text-white p-4">
+              <h2 className="mb-1">Create New Request</h2>
+              <p className="mb-0">
+                Submit a new hospital supply or equipment request
+              </p>
+            </div>
+
+            <div className="card-body p-4">
+
+              {error && (
+                <div className="alert alert-danger">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="alert alert-success">
+                  {success}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Request Title
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Enter request title"
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Description
+                  </label>
+                  <textarea
+                    className="form-control"
+                    name="description"
+                    rows="4"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Describe your request"
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Request Type
+                  </label>
+                  <select
+                    className="form-select"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select request type</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="supplies">Supplies</option>
+                    <option value="IT Support">IT Support</option>
+                    <option value="equipment">Equipment</option>
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Department
+                  </label>
+                  <select
+                    className="form-select"
+                    name="department"
+                    value={formData.department}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        department: e.target.value,
+                        device: "",
+                      });
+                    }}
+                    required
+                  >
+                    <option value="">Select department</option>
+
+                    {departments.map((department) => (
+                      <option
+                        key={department._id}
+                        value={department._id}
+                      >
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Device <span className="text-muted">(Optional)</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    name="device"
+                    value={formData.device}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select device</option>
+
+                    {filteredDevices.map((device) => (
+                      <option
+                        key={device._id}
+                        value={device._id}
+                      >
+                        {device.name} - {device.assetTag}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label fw-semibold">
+                    Requested By
+                  </label>
+                  <select
+                    className="form-select"
+                    name="requestedBy"
+                    value={formData.requestedBy}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select employee</option>
+
+                    {users.map((user) => (
+                      <option key={user._id} value={user._id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn submit-btn w-100"
+                >
+                  Submit Request
+                </button>
+
+              </form>
+            </div>
+          </div>
         </div>
-
-        <br />
-
-        <div>
-          <label>Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Describe your request"
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Request Type</label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select request type</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="supplies">Supplies</option>
-            <option value="IT Support">IT Support</option>
-            <option value="equipment">Equipment</option>
-          </select>
-        </div>
-
-        <br />
-
-        <div>
-          <label>Department</label>
-          <select
-            name="department"
-            value={formData.department}
-            onChange={(e) => {
-              setFormData({
-                ...formData,
-                department: e.target.value,
-                device: "",
-              });
-            }}
-            required
-          >
-            <option value="">Select department</option>
-
-            {departments.map((department) => (
-              <option key={department._id} value={department._id}>
-                {department.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <br />
-
-        <div>
-          <label>Device</label>
-          <select
-            name="device"
-            value={formData.device}
-            onChange={handleChange}
-          >
-            <option value="">Select device (Optional)</option>
-
-            {filteredDevices.map((device) => (
-              <option key={device._id} value={device._id}>
-                {device.name} - {device.assetTag}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <br />
-
-        <div>
-          <label>Requested By</label>
-          <select
-            name="requestedBy"
-            value={formData.requestedBy}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select employee</option>
-
-            {users.map((user) => (
-              <option key={user._id} value={user._id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <br />
-
-        <button type="submit">Submit Request</button>
-      </form>
+      </div>
     </div>
   );
 };
