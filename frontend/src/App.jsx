@@ -1,12 +1,14 @@
 
 import { useEffect, useState } from "react";
+import NewRequest from "./pages/NewRequest";
 
 const App = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // Get all requests from backend
+  const fetchRequests = () => {
     fetch("http://localhost:5000/api/requests")
       .then((response) => {
         if (!response.ok) {
@@ -17,6 +19,7 @@ const App = () => {
       })
       .then((data) => {
         setRequests(data.requests);
+        setError("");
       })
       .catch(() => {
         setError("Could not load requests");
@@ -24,11 +27,21 @@ const App = () => {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchRequests();
   }, []);
 
   return (
     <div>
-      <h2>KAUH Request Management System</h2>
+      <h1>KAUH Request Management System</h1>
+
+      <NewRequest onRequestCreated={fetchRequests} />
+
+      <hr />
+
+      <h2>All Requests</h2>
 
       {loading && <p>Loading requests...</p>}
 
@@ -44,6 +57,9 @@ const App = () => {
           <p>{request.description}</p>
           <p>Type: {request.type}</p>
           <p>Status: {request.status}</p>
+          <p>
+            Device: {request.device ? request.device.name : "No device selected"}
+          </p>
           <hr />
         </div>
       ))}
