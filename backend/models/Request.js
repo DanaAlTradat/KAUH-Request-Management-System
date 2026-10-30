@@ -27,7 +27,16 @@ const requestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
     required: true
-  }
+  }, 
+  
+device: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Device",
+  default: null,
+},
+
 })
+
+
 
 module.exports = mongoose.model("Request", requestSchema)
