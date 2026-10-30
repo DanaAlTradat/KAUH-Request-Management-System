@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Devices.css";
 
+
 const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +14,8 @@ const Devices = () => {
 
   const [departments, setDepartments] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deviceToDelete, setDeviceToDelete] = useState(null);
   const [saving, setSaving] = useState(false);
 
   // Edit device states
@@ -189,6 +192,44 @@ const Devices = () => {
       setError(error.message);
     } finally {
       setSaving(false);
+    }
+  };
+  // Open delete confirmation
+  const handleDeleteDevice = (device) => {
+    setDeviceToDelete(device);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm device deletion
+  const confirmDeleteDevice = async () => {
+    if (!deviceToDelete) return;
+
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/devices/${deviceToDelete._id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete device");
+      }
+
+      setDevices((previousDevices) =>
+        previousDevices.filter((device) => device._id !== deviceToDelete._id),
+      );
+
+      setSuccess("Device deleted successfully!");
+      setShowDeleteModal(false);
+      setDeviceToDelete(null);
+    } catch (error) {
+      setError(error.message);
     }
   };
 
@@ -660,12 +701,21 @@ const Devices = () => {
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => handleEditClick(device)}
-                      >
-                        Edit
-                      </button>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEditClick(device)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDeleteDevice(device)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -682,6 +732,44 @@ const Devices = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <div className="delete-modal-icon">
+              <span>!</span>
+            </div>
+
+            <h4>Delete Device?</h4>
+
+            <p>
+              Are you sure you want to delete
+              <strong> {deviceToDelete?.name}</strong>? This action cannot be
+              undone.
+            </p>
+
+            <div className="delete-modal-actions">
+              <button
+                className="cancel-delete-btn"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeviceToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="confirm-delete-btn"
+                onClick={confirmDeleteDevice}
+              >
+                Delete Device
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
