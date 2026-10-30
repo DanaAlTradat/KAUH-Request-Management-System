@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import "./Devices.css";
 
@@ -6,25 +5,45 @@ const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [departments, setDepartments] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    assetTag: "",
+    brand: "",
+    model: "",
+    department: "",
+    status: "Available",
+    description: "",
+  });
 
   // Fetch devices from backend
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/devices")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch devices");
+    Promise.all([
+      fetch("http://localhost:5000/api/devices"),
+      fetch("http://localhost:5000/api/departments"),
+    ])
+      .then(async ([devicesResponse, departmentsResponse]) => {
+        if (!devicesResponse.ok || !departmentsResponse.ok) {
+          throw new Error("Failed to load data");
         }
-        return response.json();
-      })
-      .then((data) => {
-        setDevices(data.devices || []);
+
+        const devicesData = await devicesResponse.json();
+        const departmentsData = await departmentsResponse.json();
+
+        setDevices(devicesData.devices || []);
+        setDepartments(departmentsData.departments || []);
       })
       .catch(() => {
-        setError("Could not load devices");
+        setError("Could not load devices and departments");
       })
       .finally(() => {
         setLoading(false);
@@ -32,13 +51,79 @@ const Devices = () => {
   }, []);
 
   // Get unique departments
-  const departments = [
+  const departmentNames = [
     ...new Set(
-      devices
-        .map((device) => device.department?.name)
-        .filter(Boolean)
+      devices.map((device) => device.department?.name).filter(Boolean),
     ),
   ];
+  // Handle form inputs
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+  
+const handleAddDevice = async (e) => {
+  e.preventDefault();
+
+  setSuccess("");
+
+  setError("");
+  setSaving(true);
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/devices",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to add device");
+    }
+
+    // Refresh devices list
+    const devicesResponse = await fetch(
+      "http://localhost:5000/api/devices"
+    );
+
+    const devicesData = await devicesResponse.json();
+
+    setDevices(devicesData.devices || []);
+
+    // Reset form
+    setFormData({
+      name: "",
+      category: "",
+      assetTag: "",
+      brand: "",
+      model: "",
+      department: "",
+      status: "Available",
+      description: "",
+    });
+
+    setShowForm(false);
+
+setSuccess("Device added successfully!");
+setError("");
+
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Filter devices
   const filteredDevices = devices.filter((device) => {
@@ -54,8 +139,7 @@ const Devices = () => {
       device.department?.name === selectedDepartment;
 
     const matchesStatus =
-      selectedStatus === "All" ||
-      device.status === selectedStatus;
+      selectedStatus === "All" || device.status === selectedStatus;
 
     return matchesSearch && matchesDepartment && matchesStatus;
   });
@@ -87,32 +171,209 @@ const Devices = () => {
 
   return (
     <div className="devices-page">
-
       {/* Page Heading */}
-      <div className="page-heading">
-        <div>
-          <h2>Devices Management</h2>
-          <p>View and manage hospital equipment</p>
+      
+{/* Page Heading */}
+<div className="page-heading">
+  <div>
+    <h2>Devices Management</h2>
+    <p>View and manage hospital equipment</p>
+  </div>
+
+  <div className="d-flex align-items-center gap-3">
+    <span className="devices-count">
+      {filteredDevices.length} of {devices.length} Devices
+    </span>
+
+    <button
+      className="btn add-device-btn"
+      onClick={() => setShowForm(!showForm)}
+    >
+      + Add New Device
+    </button>
+  </div>
+</div>
+
+
+{/* Add Device Form */}
+{showForm && (
+  <div className="card add-device-card mb-4">
+    <div className="card-header add-device-header">
+      <h5 className="mb-0">Add New Device</h5>
+      <p className="mb-0">Enter the device information below</p>
+    </div>
+
+    <div className="card-body p-4">
+      <form onSubmit={handleAddDevice}>
+        <div className="row g-3">
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Device Name
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              name="name"
+              value={formData.name}
+              onChange={handleFormChange}
+              placeholder="Enter device name"
+              required
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Category
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              name="category"
+              value={formData.category}
+              onChange={handleFormChange}
+              placeholder="Enter category"
+              required
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Asset Tag
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              name="assetTag"
+              value={formData.assetTag}
+              onChange={handleFormChange}
+              placeholder="Example: DEMO-069"
+              required
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Brand
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              name="brand"
+              value={formData.brand}
+              onChange={handleFormChange}
+              placeholder="Enter brand"
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Model
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              name="model"
+              value={formData.model}
+              onChange={handleFormChange}
+              placeholder="Enter model"
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Department
+            </label>
+            <select
+              className="form-select"
+              name="department"
+              value={formData.department}
+              onChange={handleFormChange}
+              required
+            >
+              <option value="">Select department</option>
+
+              {departments.map((department) => (
+                <option key={department._id} value={department._id}>
+                  {department.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label fw-semibold">
+              Device Status
+            </label>
+            <select
+              className="form-select"
+              name="status"
+              value={formData.status}
+              onChange={handleFormChange}
+            >
+              <option value="Available">Available</option>
+              <option value="Under Maintenance">Under Maintenance</option>
+              <option value="Out of Service">Out of Service</option>
+            </select>
+          </div>
+
+          <div className="col-12">
+            <label className="form-label fw-semibold">
+              Description
+            </label>
+            <textarea
+              className="form-control"
+              name="description"
+              rows="3"
+              value={formData.description}
+              onChange={handleFormChange}
+              placeholder="Enter device description"
+            />
+          </div>
+
         </div>
 
-        <span className="devices-count">
-          {filteredDevices.length} of {devices.length} Devices
-        </span>
-      </div>
+        <div className="d-flex justify-content-end gap-2 mt-4">
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={() => setShowForm(false)}
+          >
+            Cancel
+          </button>
 
-      {error && (
-        <div className="alert alert-danger">{error}</div>
-      )}
+          <button
+            type="submit"
+            className="btn add-device-btn"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Device"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+{success && (
+  <div className="alert alert-success success-message">
+    <strong>Success!</strong> {success}
+  </div>
+)}
+
+{error && (
+  <div className="alert alert-danger">
+    {error}
+  </div>
+)}
+      
 
       {/* Search and Filters */}
       <div className="card filter-card mb-4">
         <div className="card-body">
           <div className="row g-3">
-
             <div className="col-lg-4">
-              <label className="form-label fw-semibold">
-                Search Devices
-              </label>
+              <label className="form-label fw-semibold">Search Devices</label>
               <input
                 type="text"
                 className="form-control"
@@ -123,19 +384,15 @@ const Devices = () => {
             </div>
 
             <div className="col-lg-4">
-              <label className="form-label fw-semibold">
-                Department
-              </label>
+              <label className="form-label fw-semibold">Department</label>
               <select
                 className="form-select"
                 value={selectedDepartment}
-                onChange={(e) =>
-                  setSelectedDepartment(e.target.value)
-                }
+                onChange={(e) => setSelectedDepartment(e.target.value)}
               >
                 <option value="All">All Departments</option>
 
-                {departments.map((department) => (
+                {departmentNames.map((department) => (
                   <option key={department} value={department}>
                     {department}
                   </option>
@@ -144,27 +401,18 @@ const Devices = () => {
             </div>
 
             <div className="col-lg-4">
-              <label className="form-label fw-semibold">
-                Device Status
-              </label>
+              <label className="form-label fw-semibold">Device Status</label>
               <select
                 className="form-select"
                 value={selectedStatus}
-                onChange={(e) =>
-                  setSelectedStatus(e.target.value)
-                }
+                onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 <option value="All">All Statuses</option>
                 <option value="Available">Available</option>
-                <option value="Under Maintenance">
-                  Under Maintenance
-                </option>
-                <option value="Out of Service">
-                  Out of Service
-                </option>
+                <option value="Under Maintenance">Under Maintenance</option>
+                <option value="Out of Service">Out of Service</option>
               </select>
             </div>
-
           </div>
         </div>
       </div>
@@ -172,7 +420,6 @@ const Devices = () => {
       {/* Devices Table */}
       <div className="card devices-table-card">
         <div className="card-body">
-
           <div className="table-responsive">
             <table className="table align-middle">
               <thead>
@@ -189,24 +436,20 @@ const Devices = () => {
               <tbody>
                 {filteredDevices.map((device) => (
                   <tr key={device._id}>
-                    <td className="fw-semibold">
-                      {device.name}
-                    </td>
+                    <td className="fw-semibold">{device.name}</td>
 
                     <td>{device.assetTag}</td>
 
                     <td>{device.category}</td>
 
-                    <td>
-                      {device.department?.name || "Not specified"}
-                    </td>
+                    <td>{device.department?.name || "Not specified"}</td>
 
                     <td>{device.brand}</td>
 
                     <td>
                       <span
                         className={`device-status ${getStatusClass(
-                          device.status
+                          device.status,
                         )}`}
                       >
                         {device.status}
@@ -225,10 +468,8 @@ const Devices = () => {
               </tbody>
             </table>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 };
