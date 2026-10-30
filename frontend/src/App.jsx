@@ -5,21 +5,24 @@ import "./App.css";
 
 const App = () => {
   const [requests, setRequests] = useState([]);
+  const [devicesCount, setDevicesCount] = useState(0);
+  const [departmentsCount, setDepartmentsCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activePage, setActivePage] = useState("dashboard");
 
-  // Get all requests from backend
+  // Get all requests
   const fetchRequests = () => {
     fetch("http://localhost:5000/api/requests")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch requests");
         }
-
         return response.json();
       })
       .then((data) => {
-        setRequests(data.requests);
+        setRequests(data.requests || []);
         setError("");
       })
       .catch(() => {
@@ -30,11 +33,48 @@ const App = () => {
       });
   };
 
+  // Get devices and departments count
+  const fetchStatistics = async () => {
+    try {
+      const [devicesResponse, departmentsResponse] =
+        await Promise.all([
+          fetch("http://localhost:5000/api/devices"),
+          fetch("http://localhost:5000/api/departments"),
+        ]);
+
+      if (!devicesResponse.ok || !departmentsResponse.ok) {
+        throw new Error("Failed to load statistics");
+      }
+
+      const devicesData = await devicesResponse.json();
+      const departmentsData = await departmentsResponse.json();
+
+      setDevicesCount(devicesData.devices?.length || 0);
+      setDepartmentsCount(departmentsData.departments?.length || 0);
+    } catch (error) {
+      console.error("Statistics error:", error);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchStatistics();
   }, []);
 
-  // Get status badge style
+  // Calculate request statistics
+  const pendingCount = requests.filter(
+    (request) => request.status?.toLowerCase() === "pending"
+  ).length;
+
+  const completedCount = requests.filter(
+    (request) => request.status?.toLowerCase() === "completed"
+  ).length;
+
+  const approvedCount = requests.filter(
+    (request) => request.status?.toLowerCase() === "approved"
+  ).length;
+
+  // Status badge
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
       case "approved":
@@ -50,134 +90,283 @@ const App = () => {
     }
   };
 
+  // Request card
+  const RequestCard = ({ request }) => (
+    <div className="card request-item h-100">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-start mb-3">
+          <h5 className="request-title">{request.title}</h5>
+
+          <span className={`status-badge ${getStatusClass(request.status)}`}>
+            {request.status}
+          </span>
+        </div>
+
+        <p className="request-description">{request.description}</p>
+
+        <hr />
+
+        <p>
+          <strong>Type:</strong> {request.type}
+        </p>
+
+        <p>
+          <strong>Department:</strong>{" "}
+          {request.department?.name || "Not specified"}
+        </p>
+
+        <p>
+          <strong>Requested By:</strong>{" "}
+          {request.requestedBy?.name || "Not specified"}
+        </p>
+
+        <p className="mb-0">
+          <strong>Device:</strong>{" "}
+          {request.device?.name || "No device selected"}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="app-container">
+    <div className="dashboard-layout">
 
-      {/* Header */}
-      <header className="main-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="brand">
-              <div className="brand-logo">K</div>
-
-              <div>
-                <h1>KAUH</h1>
-                <p>Request Management System</p>
-              </div>
-            </div>
-
-            <div className="header-label">
-              Hospital Management Portal
-            </div>
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="brand-logo">K</div>
+          <div>
+            <h4>KAUH</h4>
+            <span>RequestHub</span>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container main-content">
+        <p className="sidebar-label">MAIN MENU</p>
 
-        <div className="welcome-section">
-          <h2>Welcome to KAUH RequestHub</h2>
-          <p>
-            Manage hospital supply and equipment requests efficiently.
-          </p>
+        <button
+          className={`sidebar-link ${
+            activePage === "dashboard" ? "active" : ""
+          }`}
+          onClick={() => setActivePage("dashboard")}
+        >
+          <span>▦</span> Dashboard
+        </button>
+
+        <button
+          className={`sidebar-link ${
+            activePage === "newRequest" ? "active" : ""
+          }`}
+          onClick={() => setActivePage("newRequest")}
+        >
+          <span>＋</span> New Request
+        </button>
+
+        <button
+          className={`sidebar-link ${
+            activePage === "requests" ? "active" : ""
+          }`}
+          onClick={() => setActivePage("requests")}
+        >
+          <span>☷</span> All Requests
+        </button>
+
+        <div className="sidebar-footer">
+          <span>KAUH</span>
+          <p>Hospital Management System</p>
         </div>
+      </aside>
 
-        {/* New Request Form */}
-        <NewRequest onRequestCreated={fetchRequests} />
+      {/* Main Area */}
+      <div className="dashboard-main">
 
-        {/* All Requests */}
-        <section className="requests-section">
-
-          <div className="section-heading">
-            <div>
-              <h2>All Requests</h2>
-              <p>View and follow up on submitted requests</p>
-            </div>
-
-            <span className="requests-count">
-              {requests.length} Requests
-            </span>
+        {/* Top Bar */}
+        <header className="dashboard-topbar">
+          <div>
+            <h5>KAUH Request Management System</h5>
+            <p>Hospital Management Portal</p>
           </div>
 
-          {loading && (
-            <div className="alert alert-info">
-              Loading requests...
-            </div>
-          )}
+          <div className="admin-label">
+            <span className="admin-avatar">A</span>
+            <span>Administrator</span>
+          </div>
+        </header>
+
+        <main className="dashboard-content">
 
           {error && (
-            <div className="alert alert-danger">
-              {error}
-            </div>
+            <div className="alert alert-danger">{error}</div>
           )}
 
-          {!loading && !error && requests.length === 0 && (
-            <div className="empty-state">
-              <h5>No Requests Found</h5>
-              <p>There are currently no requests to display.</p>
-            </div>
-          )}
-
-          <div className="row g-3">
-            {requests.map((request) => (
-              <div className="col-md-6" key={request._id}>
-                <div className="card request-item h-100">
-
-                  <div className="card-body">
-
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="request-title">
-                        {request.title}
-                      </h5>
-
-                      <span className={`status-badge ${getStatusClass(request.status)}`}>
-                        {request.status}
-                      </span>
-                    </div>
-
-                    <p className="request-description">
-                      {request.description}
-                    </p>
-
-                    <hr />
-
-                    <p>
-                      <strong>Type:</strong> {request.type}
-                    </p>
-
-                    <p>
-                      <strong>Department:</strong>{" "}
-                      {request.department?.name || "Not specified"}
-                    </p>
-
-                    <p>
-                      <strong>Requested By:</strong>{" "}
-                      {request.requestedBy?.name || "Not specified"}
-                    </p>
-
-                    <p className="mb-0">
-                      <strong>Device:</strong>{" "}
-                      {request.device
-                        ? request.device.name
-                        : "No device selected"}
-                    </p>
-
-                  </div>
+          {/* Dashboard Page */}
+          {activePage === "dashboard" && (
+            <>
+              <div className="page-heading">
+                <div>
+                  <h2>Dashboard Overview</h2>
+                  <p>Welcome to KAUH RequestHub</p>
                 </div>
               </div>
-            ))}
-          </div>
 
-        </section>
-      </main>
+              {loading ? (
+                <p>Loading dashboard...</p>
+              ) : (
+                <>
+                  {/* Statistics */}
+                  <div className="row g-3 statistics-row">
 
-      {/* Footer */}
-      <footer className="main-footer">
-        <p>KAUH Request Management System</p>
-        <span>King Abdullah University Hospital</span>
-      </footer>
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon">☷</div>
+                        <p>Total Requests</p>
+                        <h3>{requests.length}</h3>
+                        <span>All submitted requests</span>
+                      </div>
+                    </div>
 
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon pending-icon">◷</div>
+                        <p>Pending Requests</p>
+                        <h3>{pendingCount}</h3>
+                        <span>Waiting for action</span>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon completed-icon">✓</div>
+                        <p>Completed Requests</p>
+                        <h3>{completedCount}</h3>
+                        <span>Successfully completed</span>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon devices-icon">▣</div>
+                        <p>Total Devices</p>
+                        <h3>{devicesCount}</h3>
+                        <span>Registered devices</span>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon departments-icon">⌂</div>
+                        <p>Total Departments</p>
+                        <h3>{departmentsCount}</h3>
+                        <span>Registered departments</span>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 col-xl-3">
+                      <div className="stat-card">
+                        <div className="stat-icon approved-icon">✓</div>
+                        <p>Approved Requests</p>
+                        <h3>{approvedCount}</h3>
+                        <span>Approved requests</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Recent Requests */}
+                  <section className="recent-section">
+                    <div className="section-heading">
+                      <div>
+                        <h3>Recent Requests</h3>
+                        <p>Latest submitted hospital requests</p>
+                      </div>
+
+                      <button
+                        className="view-all-btn"
+                        onClick={() => setActivePage("requests")}
+                      >
+                        View All
+                      </button>
+                    </div>
+
+                    <div className="row g-3">
+                      {requests.slice(-4).reverse().map((request) => (
+                        <div className="col-lg-6" key={request._id}>
+                          <RequestCard request={request} />
+                        </div>
+                      ))}
+
+                      {requests.length === 0 && (
+                        <div className="col-12">
+                          <div className="empty-state">
+                            No requests have been submitted yet.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+            </>
+          )}
+
+          {/* New Request Page */}
+          {activePage === "newRequest" && (
+            <section>
+              <div className="page-heading">
+                <div>
+                  <h2>Create New Request</h2>
+                  <p>Submit a new hospital request</p>
+                </div>
+              </div>
+
+              <NewRequest
+                onRequestCreated={() => {
+                  fetchRequests();
+                  fetchStatistics();
+                }}
+              />
+            </section>
+          )}
+
+          {/* All Requests Page */}
+          {activePage === "requests" && (
+            <section>
+              <div className="page-heading">
+                <div>
+                  <h2>All Requests</h2>
+                  <p>View and follow up on submitted requests</p>
+                </div>
+
+                <span className="requests-count">
+                  {requests.length} Requests
+                </span>
+              </div>
+
+              {loading && <p>Loading requests...</p>}
+
+              {!loading && requests.length === 0 && (
+                <div className="empty-state">
+                  No requests found.
+                </div>
+              )}
+
+              <div className="row g-3">
+                {requests.map((request) => (
+                  <div className="col-lg-6" key={request._id}>
+                    <RequestCard request={request} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+        </main>
+
+        <footer className="dashboard-footer">
+          KAUH Request Management System
+          <span>King Abdullah University Hospital</span>
+        </footer>
+
+      </div>
     </div>
   );
 };
