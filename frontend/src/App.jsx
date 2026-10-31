@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
 import NewRequest from "./pages/NewRequest";
 import Devices from "./pages/Devices";
+import Login from "./pages/Login";
 import "./App.css";
 
 const App = () => {
   const [requests, setRequests] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null); 
+  const handleLoginSuccess = (data) => {
+  localStorage.setItem("token", data.token);
+  setCurrentUser(data.user);
+};
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  setCurrentUser(null);
+};
+
   // Request details modal
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [devicesCount, setDevicesCount] = useState(0);
@@ -103,9 +115,36 @@ const App = () => {
   };
 
   useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    fetch("http://localhost:5000/api/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Invalid token");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setCurrentUser(data.user);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        setCurrentUser(null);
+      });
+  }
+}, []);
+ 
+  useEffect(() => {
+  if (currentUser) {
     fetchRequests();
     fetchStatistics();
-  }, []);
+  }
+}, [currentUser]);
 
   // Filter requests by search, status and department
   const filteredRequests = requests.filter((request) => {
@@ -257,7 +296,11 @@ const App = () => {
     );
   };
   return (
-    <div className="dashboard-layout">
+  <>
+    {!currentUser ? (
+      <Login onLoginSuccess={handleLoginSuccess} />
+    ) : (
+      <div className="dashboard-layout">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -318,11 +361,23 @@ const App = () => {
             <h5>KAUH Request Management System</h5>
             <p>Hospital Management Portal</p>
           </div>
+<div className="admin-label">
+  <span className="admin-avatar">
+    {currentUser.name?.charAt(0).toUpperCase()}
+  </span>
 
-          <div className="admin-label">
-            <span className="admin-avatar">A</span>
-            <span>Administrator</span>
-          </div>
+  <span>{currentUser.name}</span>
+  <span className="user-role">
+  {currentUser.role}
+</span>
+
+  <button
+    className="btn btn-outline-danger btn-sm ms-3"
+    onClick={handleLogout}
+  >
+    Logout
+  </button>
+</div>
         </header>
 
         <main className="dashboard-content">
@@ -650,9 +705,11 @@ const App = () => {
         <footer className="dashboard-footer">
           KAUH Request Management System
           <span>King Abdullah University Hospital</span>
-        </footer>
+               </footer>
       </div>
     </div>
+    )}
+  </>
   );
 };
 
