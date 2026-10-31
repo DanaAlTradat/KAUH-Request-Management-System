@@ -3,13 +3,23 @@ const express = require("express");
 const router = express.Router();
 
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+// Create User
 router.post("/", async (req, res) => {
   try {
+    const saltRounds = Number(process.env.SALT_ROUNDS);
+
+    const hashedPassword = await bcrypt.hash(
+      req.body.password,
+      saltRounds
+    );
+
     const user = new User({
       name: req.body.name,
       email: req.body.email,
-      password: req.body.password,
+      password: hashedPassword,
       role: req.body.role || "employee",
       department: req.body.department,
     });
@@ -40,7 +50,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-
+// Get All Users
 router.get("/", async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -57,7 +67,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-
+// Get User By ID
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
@@ -80,6 +90,5 @@ router.get("/:id", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
