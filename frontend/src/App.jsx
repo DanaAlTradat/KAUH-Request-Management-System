@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import NewRequest from "./pages/NewRequest";
 import Devices from "./pages/Devices";
@@ -6,6 +5,8 @@ import "./App.css";
 
 const App = () => {
   const [requests, setRequests] = useState([]);
+  // Request details modal
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [devicesCount, setDevicesCount] = useState(0);
   const [departmentsCount, setDepartmentsCount] = useState(0);
 
@@ -34,7 +35,6 @@ const App = () => {
       });
   };
 
-  
   // Update request status
   const handleUpdateRequestStatus = async (request, newStatus) => {
     try {
@@ -53,7 +53,7 @@ const App = () => {
             department: request.department?._id,
             device: request.device?._id || null,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -72,15 +72,13 @@ const App = () => {
     }
   };
 
-
   // Get devices and departments count
   const fetchStatistics = async () => {
     try {
-      const [devicesResponse, departmentsResponse] =
-        await Promise.all([
-          fetch("http://localhost:5000/api/devices"),
-          fetch("http://localhost:5000/api/departments"),
-        ]);
+      const [devicesResponse, departmentsResponse] = await Promise.all([
+        fetch("http://localhost:5000/api/devices"),
+        fetch("http://localhost:5000/api/departments"),
+      ]);
 
       if (!devicesResponse.ok || !departmentsResponse.ok) {
         throw new Error("Failed to load statistics");
@@ -103,15 +101,15 @@ const App = () => {
 
   // Calculate request statistics
   const pendingCount = requests.filter(
-    (request) => request.status?.toLowerCase() === "pending"
+    (request) => request.status?.toLowerCase() === "pending",
   ).length;
 
   const completedCount = requests.filter(
-    (request) => request.status?.toLowerCase() === "completed"
+    (request) => request.status?.toLowerCase() === "completed",
   ).length;
 
   const approvedCount = requests.filter(
-    (request) => request.status?.toLowerCase() === "approved"
+    (request) => request.status?.toLowerCase() === "approved",
   ).length;
 
   // Status badge
@@ -130,7 +128,6 @@ const App = () => {
     }
   };
 
-  
   // Request card
   const RequestCard = ({ request }) => {
     const currentStatus = request.status?.toLowerCase();
@@ -169,6 +166,17 @@ const App = () => {
             {request.device?.name || "No device selected"}
           </p>
 
+          <div className="mb-3">
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => setSelectedRequest(request)}
+            >
+              View Details
+            </button>
+          </div>
+
+          <hr />
+
           <hr />
 
           <div className="d-flex gap-2 flex-wrap">
@@ -176,18 +184,14 @@ const App = () => {
               <>
                 <button
                   className="btn btn-sm btn-success"
-                  onClick={() =>
-                    handleUpdateRequestStatus(request, "Approved")
-                  }
+                  onClick={() => handleUpdateRequestStatus(request, "Approved")}
                 >
                   Approve
                 </button>
 
                 <button
                   className="btn btn-sm btn-outline-danger"
-                  onClick={() =>
-                    handleUpdateRequestStatus(request, "Rejected")
-                  }
+                  onClick={() => handleUpdateRequestStatus(request, "Rejected")}
                 >
                   Reject
                 </button>
@@ -197,9 +201,7 @@ const App = () => {
             {currentStatus === "approved" && (
               <button
                 className="btn btn-sm btn-primary"
-                onClick={() =>
-                  handleUpdateRequestStatus(request, "Completed")
-                }
+                onClick={() => handleUpdateRequestStatus(request, "Completed")}
               >
                 Mark as Completed
               </button>
@@ -221,9 +223,8 @@ const App = () => {
       </div>
     );
   };
-    return (
+  return (
     <div className="dashboard-layout">
-
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -264,13 +265,11 @@ const App = () => {
         </button>
 
         <button
-  className={`sidebar-link ${
-    activePage === "devices" ? "active" : ""
-  }`}
-  onClick={() => setActivePage("devices")}
->
-  <span>▣</span> Devices
-</button>
+          className={`sidebar-link ${activePage === "devices" ? "active" : ""}`}
+          onClick={() => setActivePage("devices")}
+        >
+          <span>▣</span> Devices
+        </button>
 
         <div className="sidebar-footer">
           <span>KAUH</span>
@@ -280,7 +279,6 @@ const App = () => {
 
       {/* Main Area */}
       <div className="dashboard-main">
-
         {/* Top Bar */}
         <header className="dashboard-topbar">
           <div>
@@ -295,10 +293,7 @@ const App = () => {
         </header>
 
         <main className="dashboard-content">
-
-          {error && (
-            <div className="alert alert-danger">{error}</div>
-          )}
+          {error && <div className="alert alert-danger">{error}</div>}
 
           {/* Dashboard Page */}
           {activePage === "dashboard" && (
@@ -316,7 +311,6 @@ const App = () => {
                 <>
                   {/* Statistics */}
                   <div className="row g-3 statistics-row">
-
                     <div className="col-md-6 col-xl-3">
                       <div className="stat-card">
                         <div className="stat-icon">☷</div>
@@ -370,7 +364,6 @@ const App = () => {
                         <span>Approved requests</span>
                       </div>
                     </div>
-
                   </div>
 
                   {/* Recent Requests */}
@@ -390,11 +383,14 @@ const App = () => {
                     </div>
 
                     <div className="row g-3">
-                      {requests.slice(-4).reverse().map((request) => (
-                        <div className="col-lg-6" key={request._id}>
-                          <RequestCard request={request} />
-                        </div>
-                      ))}
+                      {requests
+                        .slice(-4)
+                        .reverse()
+                        .map((request) => (
+                          <div className="col-lg-6" key={request._id}>
+                            <RequestCard request={request} />
+                          </div>
+                        ))}
 
                       {requests.length === 0 && (
                         <div className="col-12">
@@ -446,12 +442,9 @@ const App = () => {
               {loading && <p>Loading requests...</p>}
 
               {!loading && requests.length === 0 && (
-                <div className="empty-state">
-                  No requests found.
-                </div>
+                <div className="empty-state">No requests found.</div>
               )}
 
-      
               <div className="row g-3">
                 {requests.map((request) => (
                   <div className="col-lg-6" key={request._id}>
@@ -461,13 +454,104 @@ const App = () => {
               </div>
             </section>
           )}
-                  {/* Devices Page */}
-{activePage === "devices" && (
-  <section>
-    <Devices />
-  </section>
-)}
+          {/* Devices Page */}
+          {activePage === "devices" && (
+            <section>
+              <Devices />
+            </section>
+          )}
 
+          
+{/* Request Details Modal */}
+{selectedRequest && (
+  <div className="request-modal-overlay">
+    <div className="request-modal">
+
+      <div className="request-modal-header">
+        <div>
+          <h4>Request Details</h4>
+          <p>Complete information about this request</p>
+        </div>
+
+        <button
+          className="close-modal-btn"
+          onClick={() => setSelectedRequest(null)}
+        >
+          &times;
+        </button>
+      </div>
+
+      <div className="request-modal-body">
+
+        <h5>{selectedRequest.title}</h5>
+
+        <p>{selectedRequest.description}</p>
+
+        <hr />
+
+        <p>
+          <strong>Status:</strong>{" "}
+          {selectedRequest.status}
+        </p>
+
+        <p>
+          <strong>Type:</strong>{" "}
+          {selectedRequest.type}
+        </p>
+
+        <p>
+          <strong>Department:</strong>{" "}
+          {selectedRequest.department?.name || "Not specified"}
+        </p>
+
+        <p>
+          <strong>Requested By:</strong>{" "}
+          {selectedRequest.requestedBy?.name || "Not specified"}
+        </p>
+
+        <p>
+          <strong>Email:</strong>{" "}
+          {selectedRequest.requestedBy?.email || "Not available"}
+        </p>
+
+        <p>
+          <strong>Device:</strong>{" "}
+          {selectedRequest.device?.name || "No device selected"}
+        </p>
+
+        <p>
+          <strong>Asset Tag:</strong>{" "}
+          {selectedRequest.device?.assetTag || "Not available"}
+        </p>
+
+        <p>
+          <strong>Created At:</strong>{" "}
+          {selectedRequest.createdAt
+            ? new Date(selectedRequest.createdAt).toLocaleString()
+            : "Not available"}
+        </p>
+
+        <p>
+          <strong>Last Updated:</strong>{" "}
+          {selectedRequest.updatedAt
+            ? new Date(selectedRequest.updatedAt).toLocaleString()
+            : "Not available"}
+        </p>
+
+      </div>
+
+      <div className="request-modal-footer">
+        <button
+          className="btn btn-secondary"
+          onClick={() => setSelectedRequest(null)}
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
 
         </main>
 
@@ -475,7 +559,6 @@ const App = () => {
           KAUH Request Management System
           <span>King Abdullah University Hospital</span>
         </footer>
-
       </div>
     </div>
   );
