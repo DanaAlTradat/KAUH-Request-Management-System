@@ -34,6 +34,45 @@ const App = () => {
       });
   };
 
+  
+  // Update request status
+  const handleUpdateRequestStatus = async (request, newStatus) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/requests/${request._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: request.title,
+            description: request.description,
+            type: request.type,
+            status: newStatus,
+            department: request.department?._id,
+            device: request.device?._id || null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update request");
+      }
+
+      await fetchRequests();
+      setError("");
+
+      return true;
+    } catch (error) {
+      setError(error.message);
+      return false;
+    }
+  };
+
+
   // Get devices and departments count
   const fetchStatistics = async () => {
     try {
@@ -91,45 +130,98 @@ const App = () => {
     }
   };
 
+  
   // Request card
-  const RequestCard = ({ request }) => (
-    <div className="card request-item h-100">
-      <div className="card-body">
-        <div className="d-flex justify-content-between align-items-start mb-3">
-          <h5 className="request-title">{request.title}</h5>
+  const RequestCard = ({ request }) => {
+    const currentStatus = request.status?.toLowerCase();
 
-          <span className={`status-badge ${getStatusClass(request.status)}`}>
-            {request.status}
-          </span>
+    return (
+      <div className="card request-item h-100">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <h5 className="request-title">{request.title}</h5>
+
+            <span className={`status-badge ${getStatusClass(request.status)}`}>
+              {request.status}
+            </span>
+          </div>
+
+          <p className="request-description">{request.description}</p>
+
+          <hr />
+
+          <p>
+            <strong>Type:</strong> {request.type}
+          </p>
+
+          <p>
+            <strong>Department:</strong>{" "}
+            {request.department?.name || "Not specified"}
+          </p>
+
+          <p>
+            <strong>Requested By:</strong>{" "}
+            {request.requestedBy?.name || "Not specified"}
+          </p>
+
+          <p>
+            <strong>Device:</strong>{" "}
+            {request.device?.name || "No device selected"}
+          </p>
+
+          <hr />
+
+          <div className="d-flex gap-2 flex-wrap">
+            {currentStatus === "pending" && (
+              <>
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() =>
+                    handleUpdateRequestStatus(request, "Approved")
+                  }
+                >
+                  Approve
+                </button>
+
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() =>
+                    handleUpdateRequestStatus(request, "Rejected")
+                  }
+                >
+                  Reject
+                </button>
+              </>
+            )}
+
+            {currentStatus === "approved" && (
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() =>
+                  handleUpdateRequestStatus(request, "Completed")
+                }
+              >
+                Mark as Completed
+              </button>
+            )}
+
+            {currentStatus === "rejected" && (
+              <span className="text-danger small">
+                This request was rejected.
+              </span>
+            )}
+
+            {currentStatus === "completed" && (
+              <span className="text-success small">
+                This request is completed.
+              </span>
+            )}
+          </div>
         </div>
-
-        <p className="request-description">{request.description}</p>
-
-        <hr />
-
-        <p>
-          <strong>Type:</strong> {request.type}
-        </p>
-
-        <p>
-          <strong>Department:</strong>{" "}
-          {request.department?.name || "Not specified"}
-        </p>
-
-        <p>
-          <strong>Requested By:</strong>{" "}
-          {request.requestedBy?.name || "Not specified"}
-        </p>
-
-        <p className="mb-0">
-          <strong>Device:</strong>{" "}
-          {request.device?.name || "No device selected"}
-        </p>
       </div>
-    </div>
-  );
-
-  return (
+    );
+  };
+    return (
     <div className="dashboard-layout">
 
       {/* Sidebar */}
