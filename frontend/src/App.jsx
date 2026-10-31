@@ -9,10 +9,16 @@ const App = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [devicesCount, setDevicesCount] = useState(0);
   const [departmentsCount, setDepartmentsCount] = useState(0);
+  const [departments, setDepartments] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activePage, setActivePage] = useState("dashboard");
+  // Request search and filters
+  const [requestSearch, setRequestSearch] = useState("");
+  const [selectedRequestStatus, setSelectedRequestStatus] = useState("All");
+  const [selectedRequestDepartment, setSelectedRequestDepartment] =
+    useState("All");
 
   // Get all requests
   const fetchRequests = () => {
@@ -86,9 +92,11 @@ const App = () => {
 
       const devicesData = await devicesResponse.json();
       const departmentsData = await departmentsResponse.json();
+      console.log("Departments received:", departmentsData.departments);
 
       setDevicesCount(devicesData.devices?.length || 0);
       setDepartmentsCount(departmentsData.departments?.length || 0);
+      setDepartments(departmentsData.departments || []);
     } catch (error) {
       console.error("Statistics error:", error);
     }
@@ -99,6 +107,31 @@ const App = () => {
     fetchStatistics();
   }, []);
 
+  // Filter requests by search, status and department
+  const filteredRequests = requests.filter((request) => {
+    const searchValue = requestSearch.toLowerCase().trim();
+
+    const matchesSearch =
+      request.title?.toLowerCase().includes(searchValue) ||
+      request.description?.toLowerCase().includes(searchValue) ||
+      request.device?.name?.toLowerCase().includes(searchValue) ||
+      request.requestedBy?.name?.toLowerCase().includes(searchValue);
+
+    const matchesStatus =
+      selectedRequestStatus === "All" ||
+      request.status?.toLowerCase() === selectedRequestStatus.toLowerCase();
+
+    const matchesDepartment =
+      selectedRequestDepartment === "All" ||
+      request.department?.name === selectedRequestDepartment;
+
+    return matchesSearch && matchesStatus && matchesDepartment;
+  });
+
+  // Get unique department names from requests
+  const requestDepartmentNames = departments.map(
+  (department) => department.name
+);
   // Calculate request statistics
   const pendingCount = requests.filter(
     (request) => request.status?.toLowerCase() === "pending",
@@ -441,12 +474,79 @@ const App = () => {
 
               {loading && <p>Loading requests...</p>}
 
-              {!loading && requests.length === 0 && (
-                <div className="empty-state">No requests found.</div>
+              {/* Search and Filters */}
+              <div className="request-filters-card mb-4">
+                <div className="row g-3">
+                  <div className="col-lg-4">
+                    <label className="form-label">Search Requests</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search by title, device or employee..."
+                      value={requestSearch}
+                      onChange={(e) => setRequestSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-lg-4">
+                    <label className="form-label">Request Status</label>
+                    <select
+                      className="form-select"
+                      value={selectedRequestStatus}
+                      onChange={(e) => setSelectedRequestStatus(e.target.value)}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div className="col-lg-4">
+                    <label className="form-label">Department</label>
+                    <select
+                      className="form-select"
+                      value={selectedRequestDepartment}
+                      onChange={(e) =>
+                        setSelectedRequestDepartment(e.target.value)
+                      }
+                    >
+                      <option value="All">All Departments</option>
+
+                      {requestDepartmentNames.map((department) => (
+                        <option key={department} value={department}>
+                          {department}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-3 d-flex justify-content-between align-items-center">
+                  <small className="text-muted">
+                    Showing {filteredRequests.length} of {requests.length}{" "}
+                    requests
+                  </small>
+
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => {
+                      setRequestSearch("");
+                      setSelectedRequestStatus("All");
+                      setSelectedRequestDepartment("All");
+                    }}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+              {!loading && filteredRequests.length === 0 && (
+                <div className="empty-state">No matching requests found.</div>
               )}
 
               <div className="row g-3">
-                {requests.map((request) => (
+                {filteredRequests.map((request) => (
                   <div className="col-lg-6" key={request._id}>
                     <RequestCard request={request} />
                   </div>
@@ -461,98 +561,90 @@ const App = () => {
             </section>
           )}
 
-          
-{/* Request Details Modal */}
-{selectedRequest && (
-  <div className="request-modal-overlay">
-    <div className="request-modal">
+          {/* Request Details Modal */}
+          {selectedRequest && (
+            <div className="request-modal-overlay">
+              <div className="request-modal">
+                <div className="request-modal-header">
+                  <div>
+                    <h4>Request Details</h4>
+                    <p>Complete information about this request</p>
+                  </div>
 
-      <div className="request-modal-header">
-        <div>
-          <h4>Request Details</h4>
-          <p>Complete information about this request</p>
-        </div>
+                  <button
+                    className="close-modal-btn"
+                    onClick={() => setSelectedRequest(null)}
+                  >
+                    &times;
+                  </button>
+                </div>
 
-        <button
-          className="close-modal-btn"
-          onClick={() => setSelectedRequest(null)}
-        >
-          &times;
-        </button>
-      </div>
+                <div className="request-modal-body">
+                  <h5>{selectedRequest.title}</h5>
 
-      <div className="request-modal-body">
+                  <p>{selectedRequest.description}</p>
 
-        <h5>{selectedRequest.title}</h5>
+                  <hr />
 
-        <p>{selectedRequest.description}</p>
+                  <p>
+                    <strong>Status:</strong> {selectedRequest.status}
+                  </p>
 
-        <hr />
+                  <p>
+                    <strong>Type:</strong> {selectedRequest.type}
+                  </p>
 
-        <p>
-          <strong>Status:</strong>{" "}
-          {selectedRequest.status}
-        </p>
+                  <p>
+                    <strong>Department:</strong>{" "}
+                    {selectedRequest.department?.name || "Not specified"}
+                  </p>
 
-        <p>
-          <strong>Type:</strong>{" "}
-          {selectedRequest.type}
-        </p>
+                  <p>
+                    <strong>Requested By:</strong>{" "}
+                    {selectedRequest.requestedBy?.name || "Not specified"}
+                  </p>
 
-        <p>
-          <strong>Department:</strong>{" "}
-          {selectedRequest.department?.name || "Not specified"}
-        </p>
+                  <p>
+                    <strong>Email:</strong>{" "}
+                    {selectedRequest.requestedBy?.email || "Not available"}
+                  </p>
 
-        <p>
-          <strong>Requested By:</strong>{" "}
-          {selectedRequest.requestedBy?.name || "Not specified"}
-        </p>
+                  <p>
+                    <strong>Device:</strong>{" "}
+                    {selectedRequest.device?.name || "No device selected"}
+                  </p>
 
-        <p>
-          <strong>Email:</strong>{" "}
-          {selectedRequest.requestedBy?.email || "Not available"}
-        </p>
+                  <p>
+                    <strong>Asset Tag:</strong>{" "}
+                    {selectedRequest.device?.assetTag || "Not available"}
+                  </p>
 
-        <p>
-          <strong>Device:</strong>{" "}
-          {selectedRequest.device?.name || "No device selected"}
-        </p>
+                  <p>
+                    <strong>Created At:</strong>{" "}
+                    {selectedRequest.createdAt
+                      ? new Date(selectedRequest.createdAt).toLocaleString()
+                      : "Not available"}
+                  </p>
 
-        <p>
-          <strong>Asset Tag:</strong>{" "}
-          {selectedRequest.device?.assetTag || "Not available"}
-        </p>
+                  <p>
+                    <strong>Last Updated:</strong>{" "}
+                    {selectedRequest.updatedAt
+                      ? new Date(selectedRequest.updatedAt).toLocaleString()
+                      : "Not available"}
+                  </p>
+                </div>
 
-        <p>
-          <strong>Created At:</strong>{" "}
-          {selectedRequest.createdAt
-            ? new Date(selectedRequest.createdAt).toLocaleString()
-            : "Not available"}
-        </p>
-
-        <p>
-          <strong>Last Updated:</strong>{" "}
-          {selectedRequest.updatedAt
-            ? new Date(selectedRequest.updatedAt).toLocaleString()
-            : "Not available"}
-        </p>
-
-      </div>
-
-      <div className="request-modal-footer">
-        <button
-          className="btn btn-secondary"
-          onClick={() => setSelectedRequest(null)}
-        >
-          Close
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
-
+                <div className="request-modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setSelectedRequest(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         <footer className="dashboard-footer">

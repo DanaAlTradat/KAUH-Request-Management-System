@@ -491,3 +491,31 @@ body {
   justify-content: flex-end;
 }
 
+
+.request-filters-card {
+  background: #FFFFFF;
+  border: 1px solid #E1E8F0;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 3px 12px rgba(20, 43, 74, 0.05);
+}
+
+.request-filters-card .form-label {
+  color: #142B4A;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.request-filters-card .form-control,
+.request-filters-card .form-select {
+  border: 1px solid #D5DEE8;
+  border-radius: 8px;
+  padding: 11px;
+}
+
+.request-filters-card .form-control:focus,
+.request-filters-card .form-select:focus {
+  border-color: #142B4A;
+  box-shadow: 0 0 0 0.2rem rgba(20, 43, 74, 0.12);
+}
+
