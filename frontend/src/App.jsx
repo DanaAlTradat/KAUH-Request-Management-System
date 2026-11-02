@@ -10,6 +10,7 @@ const App = () => {
   const handleLoginSuccess = (data) => {
   localStorage.setItem("token", data.token);
   setCurrentUser(data.user);
+  console.log("Logged in user:", data.user);
 };
 
 const handleLogout = () => {
@@ -504,7 +505,8 @@ const handleLogout = () => {
                 </div>
               </div>
 
-              <NewRequest
+              <NewRequest 
+              currentUser={currentUser}
                 onRequestCreated={() => {
                   fetchRequests();
                   fetchStatistics();

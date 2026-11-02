@@ -3,15 +3,18 @@ const express = require("express");
 const router = express.Router();
 
 const Request = require("../models/Request");
+const authenticateToken = require("../middleware/authMiddleware");
 
 // POST: Create a new request
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
   try {
+    console.log("Authenticated user:", req.user);
+    console.log("User ID:", req.user?.userId);
     const request = new Request({
       title: req.body.title,
       description: req.body.description,
       type: req.body.type,
-      requestedBy: req.body.requestedBy,
+      requestedBy: req.user.userId,
       department: req.body.department,
       device: req.body.device || null,
     });

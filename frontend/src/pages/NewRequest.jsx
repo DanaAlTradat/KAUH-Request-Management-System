@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from "react";
 import "./NewRequest.css";
 
-const NewRequest = ({ onRequestCreated }) => {
+const NewRequest = ({ onRequestCreated, currentUser }) => {
   const [departments, setDepartments] = useState([]);
   const [devices, setDevices] = useState([]);
-  const [users, setUsers] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -13,7 +11,6 @@ const NewRequest = ({ onRequestCreated }) => {
     type: "",
     department: "",
     device: "",
-    requestedBy: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -25,27 +22,20 @@ const NewRequest = ({ onRequestCreated }) => {
     Promise.all([
       fetch("http://localhost:5000/api/departments"),
       fetch("http://localhost:5000/api/devices"),
-      fetch("http://localhost:5000/api/users"),
     ])
-      .then(async ([departmentsResponse, devicesResponse, usersResponse]) => {
-        if (
-          !departmentsResponse.ok ||
-          !devicesResponse.ok ||
-          !usersResponse.ok
-        ) {
+      .then(async ([departmentsResponse, devicesResponse]) => {
+        if (!departmentsResponse.ok || !devicesResponse.ok) {
           throw new Error("Failed to load data");
         }
 
         const departmentsData = await departmentsResponse.json();
         const devicesData = await devicesResponse.json();
-        const usersData = await usersResponse.json();
 
         setDepartments(departmentsData.departments);
         setDevices(devicesData.devices);
-        setUsers(usersData.users);
       })
       .catch(() => {
-        setError("Could not load departments, devices and users");
+        setError("Could not load departments and devices");
       })
       .finally(() => {
         setLoading(false);
@@ -70,19 +60,17 @@ const NewRequest = ({ onRequestCreated }) => {
     setSuccess("");
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/requests",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...formData,
-            device: formData.device || null,
-          }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          ...formData,
+          device: formData.device || null,
+        }),
+      });
 
       const data = await response.json();
 
@@ -102,7 +90,6 @@ const NewRequest = ({ onRequestCreated }) => {
         type: "",
         department: "",
         device: "",
-        requestedBy: "",
       });
     } catch (error) {
       setError(error.message);
@@ -111,8 +98,7 @@ const NewRequest = ({ onRequestCreated }) => {
 
   // Filter devices by selected department
   const filteredDevices = devices.filter(
-    (device) =>
-      device.department?._id === formData.department
+    (device) => device.department?._id === formData.department,
   );
 
   if (loading) {
@@ -130,9 +116,7 @@ const NewRequest = ({ onRequestCreated }) => {
     <div className="container py-5">
       <div className="row justify-content-center">
         <div className="col-lg-8 col-md-10">
-
           <div className="card shadow border-0 request-card">
-
             <div className="card-header request-header text-white p-4">
               <h2 className="mb-1">Create New Request</h2>
               <p className="mb-0">
@@ -141,21 +125,11 @@ const NewRequest = ({ onRequestCreated }) => {
             </div>
 
             <div className="card-body p-4">
+              {error && <div className="alert alert-danger">{error}</div>}
 
-              {error && (
-                <div className="alert alert-danger">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="alert alert-success">
-                  {success}
-                </div>
-              )}
+              {success && <div className="alert alert-success">{success}</div>}
 
               <form onSubmit={handleSubmit}>
-
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
                     Request Title
@@ -172,9 +146,7 @@ const NewRequest = ({ onRequestCreated }) => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Description
-                  </label>
+                  <label className="form-label fw-semibold">Description</label>
                   <textarea
                     className="form-control"
                     name="description"
@@ -187,9 +159,7 @@ const NewRequest = ({ onRequestCreated }) => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Request Type
-                  </label>
+                  <label className="form-label fw-semibold">Request Type</label>
                   <select
                     className="form-select"
                     name="type"
@@ -206,9 +176,7 @@ const NewRequest = ({ onRequestCreated }) => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Department
-                  </label>
+                  <label className="form-label fw-semibold">Department</label>
                   <select
                     className="form-select"
                     name="department"
@@ -225,10 +193,7 @@ const NewRequest = ({ onRequestCreated }) => {
                     <option value="">Select department</option>
 
                     {departments.map((department) => (
-                      <option
-                        key={department._id}
-                        value={department._id}
-                      >
+                      <option key={department._id} value={department._id}>
                         {department.name}
                       </option>
                     ))}
@@ -248,44 +213,18 @@ const NewRequest = ({ onRequestCreated }) => {
                     <option value="">Select device</option>
 
                     {filteredDevices.map((device) => (
-                      <option
-                        key={device._id}
-                        value={device._id}
-                      >
+                      <option key={device._id} value={device._id}>
                         {device.name} - {device.assetTag}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">
-                    Requested By
-                  </label>
-                  <select
-                    className="form-select"
-                    name="requestedBy"
-                    value={formData.requestedBy}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select employee</option>
+                
 
-                    {users.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn submit-btn w-100"
-                >
+                <button type="submit" className="btn submit-btn w-100">
                   Submit Request
                 </button>
-
               </form>
             </div>
           </div>
