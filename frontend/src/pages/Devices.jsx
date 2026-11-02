@@ -221,6 +221,9 @@ const Devices = () => {
         `http://localhost:5000/api/devices/${deviceToDelete._id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         },
       );
 
