@@ -128,7 +128,11 @@ const Devices = () => {
         throw new Error(data.message || "Failed to add device");
       }
 
-      const devicesResponse = await fetch("http://localhost:5000/api/devices");
+      const devicesResponse = await fetch("http://localhost:5000/api/devices", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (!devicesResponse.ok) {
         throw new Error("Device added, but failed to refresh the list");
@@ -185,7 +189,11 @@ const Devices = () => {
         throw new Error(data.message || "Failed to update device");
       }
 
-      const devicesResponse = await fetch("http://localhost:5000/api/devices");
+      const devicesResponse = await fetch("http://localhost:5000/api/devices", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (!devicesResponse.ok) {
         throw new Error("Device updated, but failed to refresh the list");
