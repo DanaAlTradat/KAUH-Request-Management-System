@@ -341,12 +341,16 @@ const handleLogout = () => {
           <span>☷</span> All Requests
         </button>
 
-        <button
-          className={`sidebar-link ${activePage === "devices" ? "active" : ""}`}
-          onClick={() => setActivePage("devices")}
-        >
-          <span>▣</span> Devices
-        </button>
+        {currentUser?.role === "admin" && (
+  <button
+    className={`sidebar-link ${
+      activePage === "devices" ? "active" : ""
+    }`}
+    onClick={() => setActivePage("devices")}
+  >
+    <span>▣</span> Devices
+  </button>
+)}
 
         <div className="sidebar-footer">
           <span>KAUH</span>
