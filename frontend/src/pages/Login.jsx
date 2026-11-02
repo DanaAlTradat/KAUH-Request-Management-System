@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+import hospitalLogo from "../assets/logo.png";
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -34,7 +36,6 @@ const Login = ({ onLoginSuccess }) => {
       }
 
       onLoginSuccess(data);
-
     } catch (error) {
       setError(error.message);
     } finally {
@@ -43,18 +44,41 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-5">
-          <div className="card shadow p-4">
+    <div className="login-page">
+      <div className="login-container">
 
-            <h2 className="text-center mb-2">
-              KAUH RequestHub
-            </h2>
+        {/* Welcome Section */}
+        <div className="login-welcome">
 
-            <p className="text-center text-muted mb-4">
-              Sign in to your account
-            </p>
+          <img
+            src={hospitalLogo}
+            alt="King Abdullah University Hospital"
+            className="login-hospital-logo"
+          />
+
+          <h1>KAUH RequestHub</h1>
+
+          <h3>Smart Hospital Request Management</h3>
+
+          <p>
+            A centralized platform to manage hospital
+            requests and medical equipment efficiently.
+          </p>
+
+          <div className="login-welcome-footer">
+            KING ABDULLAH UNIVERSITY HOSPITAL
+          </div>
+
+        </div>
+
+        {/* Login Form */}
+        <div className="login-form-section">
+          <div className="login-form-content">
+
+            <div className="login-heading">
+              <h2>Welcome Back</h2>
+              <p>Sign in to access your account</p>
+            </div>
 
             {error && (
               <div className="alert alert-danger">
@@ -63,28 +87,31 @@ const Login = ({ onLoginSuccess }) => {
             )}
 
             <form onSubmit={handleLogin}>
-              <div className="mb-3">
+
+              <div className="mb-4">
                 <label className="form-label">
-                  Email
+                  Email Address
                 </label>
 
                 <input
                   type="email"
-                  className="form-control"
+                  className="form-control login-input"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="mb-3">
+              <div className="mb-4">
                 <label className="form-label">
                   Password
                 </label>
 
                 <input
                   type="password"
-                  className="form-control"
+                  className="form-control login-input"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -93,15 +120,21 @@ const Login = ({ onLoginSuccess }) => {
 
               <button
                 type="submit"
-                className="btn btn-primary w-100"
+                className="login-submit-btn"
                 disabled={loading}
               >
-                {loading ? "Signing in..." : "Login"}
+                {loading ? "Signing in..." : "Sign In"}
               </button>
+
             </form>
+
+            <p className="login-footer">
+              © 2026 KAUH Request Management System
+            </p>
 
           </div>
         </div>
+
       </div>
     </div>
   );

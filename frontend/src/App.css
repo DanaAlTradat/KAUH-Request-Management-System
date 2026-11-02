@@ -572,3 +572,183 @@ body {
     padding: 15px;
   }
 }
+
+
+/* =========================
+   LOGIN PAGE
+========================= */
+
+.login-page {
+  min-height: 100vh;
+  background: #F3F7FB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 35px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 1050px;
+  min-height: 570px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #FFFFFF;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(20, 43, 74, 0.12);
+}
+
+/* Welcome Section */
+
+.login-welcome {
+  background: #142B4A;
+  color: #FFFFFF;
+  padding: 55px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.login-hospital-logo {
+  width: 230px;
+  max-width: 100%;
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 45px;
+}
+
+.login-welcome h1 {
+  font-size: 30px;
+  font-weight: bold;
+  color: #D6B45A;
+  margin-bottom: 18px;
+}
+
+.login-welcome h3 {
+  font-size: 19px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.login-welcome p {
+  color: #DCEAF5;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.login-welcome-footer {
+  margin-top: 55px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  color: #D6B45A;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+/* Login Form */
+
+.login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 45px;
+}
+
+.login-form-content {
+  width: 100%;
+  max-width: 370px;
+}
+
+.login-heading {
+  margin-bottom: 35px;
+}
+
+.login-heading h2 {
+  color: #142B4A;
+  font-size: 29px;
+  font-weight: bold;
+  margin-bottom: 9px;
+}
+
+.login-heading p {
+  color: #718096;
+  font-size: 14px;
+}
+
+.login-form-section .form-label {
+  color: #142B4A;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.login-input {
+  padding: 12px;
+  border: 1px solid #D5DEE8;
+  border-radius: 8px;
+}
+
+.login-input:focus {
+  border-color: #142B4A;
+  box-shadow: 0 0 0 3px rgba(20, 43, 74, 0.1);
+}
+
+/* Login Button */
+
+.login-submit-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #142B4A;
+  color: #FFFFFF;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.login-submit-btn:hover {
+  background: #294565;
+  border-bottom: 3px solid #D6B45A;
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+  color: #94A3B8;
+  font-size: 11px;
+  margin-top: 35px;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 15px;
+  }
+
+  .login-container {
+    grid-template-columns: 1fr;
+  }
+
+  .login-welcome {
+    padding: 30px;
+  }
+
+  .login-hospital-logo {
+    margin-bottom: 25px;
+  }
+
+  .login-welcome-footer {
+    margin-top: 25px;
+  }
+
+  .login-form-section {
+    padding: 35px 25px;
+  }
+}
