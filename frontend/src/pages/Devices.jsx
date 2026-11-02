@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Devices.css";
 
-
 const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,8 +45,14 @@ const Devices = () => {
 
   // Fetch devices and departments
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     Promise.all([
-      fetch("http://localhost:5000/api/devices"),
+      fetch("http://localhost:5000/api/devices", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
       fetch("http://localhost:5000/api/departments"),
     ])
       .then(async ([devicesResponse, departmentsResponse]) => {
@@ -109,6 +114,7 @@ const Devices = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(formData),
       });

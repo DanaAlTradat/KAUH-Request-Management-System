@@ -3,9 +3,11 @@ const express = require("express");
 const router = express.Router();
 
 const Device = require("../models/Device");
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeRole = require("../middleware/authorizeRole");
 
 // GET: Get all devices
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   try {
     const devices = await Device.find().populate("department", "name");
 
@@ -22,7 +24,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET: Get one device by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticateToken, async (req, res) => {
   try {
     const device = await Device.findById(req.params.id)
       .populate("department", "name");
@@ -45,8 +47,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST: Create a device
-router.post("/", async (req, res) => {
+// POST: Create a device (Admin only)
+router.post("/", authenticateToken, authorizeRole("admin"), async (req, res) => {
   try {
     const device = new Device({
       name: req.body.name,
@@ -79,8 +81,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT: Update a device
-router.put("/:id", async (req, res) => {
+// PUT: Update a device (Admin only)
+router.put("/:id", authenticateToken, authorizeRole("admin"), async (req, res) => {
   try {
     const device = await Device.findByIdAndUpdate(
       req.params.id,
@@ -106,8 +108,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE: Delete a device
-router.delete("/:id", async (req, res) => {
+// DELETE: Delete a device (Admin only)
+router.delete("/:id", authenticateToken, authorizeRole("admin"), async (req, res) => {
   try {
     const device = await Device.findByIdAndDelete(req.params.id);
 
