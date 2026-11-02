@@ -36,7 +36,7 @@ const App = () => {
 
   // Get all requests
   const fetchRequests = () => {
-    fetch("http://localhost:5000/api/requests")
+    fetch("https://kauh-request-api.onrender.com/api/requests")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch requests");
@@ -59,7 +59,7 @@ const App = () => {
   const handleUpdateRequestStatus = async (request, newStatus) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/requests/${request._id}`,
+        `https://kauh-request-api.onrender.com/api/requests/${request._id}`,
         {
           method: "PUT",
           headers: {
@@ -96,8 +96,8 @@ const App = () => {
   const fetchStatistics = async () => {
     try {
       const [devicesResponse, departmentsResponse] = await Promise.all([
-        fetch("http://localhost:5000/api/devices"),
-        fetch("http://localhost:5000/api/departments"),
+        fetch("https://kauh-request-api.onrender.com/api/devices"),
+        fetch("https://kauh-request-api.onrender.com/api/departments"),
       ]);
 
       if (!devicesResponse.ok || !departmentsResponse.ok) {
@@ -120,7 +120,7 @@ const App = () => {
     const token = localStorage.getItem("token");
 
     if (token) {
-      fetch("http://localhost:5000/api/users/profile", {
+      fetch("https://kauh-request-api.onrender.com/api/users/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

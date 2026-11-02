@@ -48,12 +48,12 @@ const Devices = () => {
     const token = localStorage.getItem("token");
 
     Promise.all([
-      fetch("http://localhost:5000/api/devices", {
+      fetch("https://kauh-request-api.onrender.com/api/devices", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }),
-      fetch("http://localhost:5000/api/departments"),
+      fetch("https://kauh-request-api.onrender.com/api/departments"),
     ])
       .then(async ([devicesResponse, departmentsResponse]) => {
         if (!devicesResponse.ok || !departmentsResponse.ok) {
@@ -110,7 +110,7 @@ const Devices = () => {
     setSaving(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/devices", {
+      const response = await fetch("https://kauh-request-api.onrender.com/api/devices", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const Devices = () => {
         throw new Error(data.message || "Failed to add device");
       }
 
-      const devicesResponse = await fetch("http://localhost:5000/api/devices", {
+      const devicesResponse = await fetch("https://kauh-request-api.onrender.com/api/devices", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -173,7 +173,7 @@ const Devices = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/devices/${editingDeviceId}`,
+        `https://kauh-request-api.onrender.com/api/devices/${editingDeviceId}`,
         {
           method: "PUT",
           headers: {
@@ -189,7 +189,7 @@ const Devices = () => {
         throw new Error(data.message || "Failed to update device");
       }
 
-      const devicesResponse = await fetch("http://localhost:5000/api/devices", {
+      const devicesResponse = await fetch("https://kauh-request-api.onrender.com/api/devices", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -226,7 +226,7 @@ const Devices = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/devices/${deviceToDelete._id}`,
+        `https://kauh-request-api.onrender.com/api/devices/${deviceToDelete._id}`,
         {
           method: "DELETE",
           headers: {

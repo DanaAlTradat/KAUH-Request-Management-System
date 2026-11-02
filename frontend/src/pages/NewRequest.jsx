@@ -20,8 +20,8 @@ const NewRequest = ({ onRequestCreated, currentUser }) => {
   // Get departments, devices and users
   useEffect(() => {
     Promise.all([
-      fetch("http://localhost:5000/api/departments"),
-      fetch("http://localhost:5000/api/devices"),
+      fetch("https://kauh-request-api.onrender.com/api/departments"),
+      fetch("https://kauh-request-api.onrender.com/api/devices"),
     ])
       .then(async ([departmentsResponse, devicesResponse]) => {
         if (!departmentsResponse.ok || !devicesResponse.ok) {
@@ -60,7 +60,7 @@ const NewRequest = ({ onRequestCreated, currentUser }) => {
     setSuccess("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/requests", {
+      const response = await fetch("https://kauh-request-api.onrender.com/api/requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
