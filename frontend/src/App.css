@@ -15,10 +15,17 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar - Fixed */
 .sidebar {
   width: 250px;
   min-width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  z-index: 1000;
+
   background: #142B4A;
   color: white;
   padding: 25px 16px;
@@ -32,6 +39,15 @@ body {
   gap: 12px;
   padding: 0 8px 30px;
   border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.hospital-logo {
+  width: 65px;
+  height: 55px;
+  object-fit: contain;
+  background: white;
+  border-radius: 8px;
+  padding: 4px;
+  flex-shrink: 0;
 }
 
 .brand-logo {
@@ -110,6 +126,7 @@ body {
 .dashboard-main {
   flex: 1;
   min-width: 0;
+  margin-left: 250px;
 }
 
 .dashboard-topbar {
@@ -157,6 +174,7 @@ body {
   min-height: calc(100vh - 150px);
 }
 
+/* Page Heading */
 .page-heading {
   display: flex;
   justify-content: space-between;
@@ -384,41 +402,7 @@ body {
   margin-top: 5px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .dashboard-layout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    min-width: 0;
-    padding: 15px;
-  }
-
-  .sidebar-brand {
-    padding-bottom: 15px;
-  }
-
-  .sidebar-label,
-  .sidebar-footer {
-    display: none;
-  }
-
-  .sidebar-link {
-    margin: 3px 0;
-  }
-
-  .dashboard-content {
-    padding: 18px;
-  }
-
-  .dashboard-topbar {
-    padding: 15px;
-  }
-}
-
-
+/* Request Modal */
 .request-modal-overlay {
   position: fixed;
   inset: 0;
@@ -491,7 +475,7 @@ body {
   justify-content: flex-end;
 }
 
-
+/* Request Filters */
 .request-filters-card {
   background: #FFFFFF;
   border: 1px solid #E1E8F0;
@@ -519,3 +503,43 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(20, 43, 74, 0.12);
 }
 
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    overflow-y: visible;
+    padding: 15px;
+  }
+
+  .sidebar-brand {
+    padding-bottom: 15px;
+  }
+
+  .sidebar-label,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .sidebar-link {
+    margin: 3px 0;
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+  }
+
+  .dashboard-content {
+    padding: 18px;
+  }
+
+  .dashboard-topbar {
+    padding: 15px;
+  }
+}

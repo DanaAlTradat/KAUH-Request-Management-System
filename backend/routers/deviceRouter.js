@@ -50,6 +50,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
 // POST: Create a device (Admin only)
 router.post("/", authenticateToken, authorizeRole("admin"), async (req, res) => {
   try {
+    console.log("POST DEVICE USER:", req.user);
     const device = new Device({
       name: req.body.name,
       category: req.body.category,

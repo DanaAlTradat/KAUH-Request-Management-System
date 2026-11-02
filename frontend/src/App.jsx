@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import NewRequest from "./pages/NewRequest";
 import Devices from "./pages/Devices";
 import Login from "./pages/Login";
+import hospitalLogo from "./assets/logo.png";
 import "./App.css";
 
 const App = () => {
@@ -305,7 +306,11 @@ const handleLogout = () => {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-logo">K</div>
+          <img
+  src={hospitalLogo}
+  alt="King Abdullah University Hospital"
+  className="hospital-logo"
+/>
           <div>
             <h4>KAUH</h4>
             <span>RequestHub</span>
